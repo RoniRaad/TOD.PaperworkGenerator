@@ -1,0 +1,184 @@
+﻿@page "/"
+@using System.Text.Json
+@using System.Text.Json.Serialization;
+@using Paperwork.WebApp.Models
+@using Paperwork.Core.Models 
+@inject IHttpClientFactory ClientFactory
+
+
+<h1>PaperWork Generator</h1>
+
+<p>This component generates paperwork for the Town of Davie.</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>TOD #</th>
+            <th>TO DEPT:</th>
+            <th>TO USER:</th>
+            <th>TO LOCATION:</th>
+            <th>TECH NAME:</th>
+            <th>NOTES:</th>
+        </tr>
+    </thead>
+    <tbody id="paperworkEntriesBody">
+        @foreach (var item in paperworkEntries)
+        {
+            <tr>
+                <td>
+                    <input @bind="@(item.TOD)" @onkeydown="@Enter" @ref="lastRowFirstInput" class="form-control" placeholder="Ex: TOD22222">
+                </td>
+                <td>
+                    <input @bind="@(item.Department)" @onkeydown="@Enter" list="departments" class="form-control" placeholder="Ex: Information Technology">
+                </td>
+                <td>
+                    <input @bind="@(item.User)" @onkeydown="@Enter" list="users" class="form-control" placeholder="Ex: Roni Raad">
+                </td>
+                <td>
+                    <input @bind="@(item.Location)" @onkeydown="@Enter" list="locations" class="form-control" placeholder="Ex: Town Hall - Building B">
+                </td>
+                <td>
+                    <input @bind="@(item.Requestor)" @onkeydown="@Enter" class="form-control" placeholder="Ex: Matthew Tighe">
+                </td>
+                <td>
+                    <input @bind="@(item.Notes)" @onkeydown="@Enter" class="form-control" placeholder="Ex: Replacement">
+                </td>
+            </tr>
+        }
+
+    </tbody>
+</table>
+
+<datalist id="departments">
+    @foreach (var department in departments)
+    {
+        <option value="@department" />
+    }
+</datalist>
+
+<datalist id="users">
+    @foreach (var user in users)
+    {
+        <option value="@user" />
+    }
+</datalist>
+
+<datalist id="locations">
+    @foreach (var location in locations)
+    {
+        <option value="@location" />
+    }
+</datalist>
+
+<button class="btn btn-success" style="float:right" @onclick="GeneratePaperwork">Generate Paperwork</button>
+
+@if (ShowFileResult) {
+    <div class="modal show" style="display:block" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Paperwork Created!</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @if (errors.Count > 0)
+                    {
+                        <h5 style="color:red">Errors: </h5>
+                        @foreach (var error in errors)
+                        {
+                            <p>
+                                @error
+                            </p>
+                        }
+                    }
+                    <h5 style="color:green">Info: </h5>
+                    @foreach (var info in infos)
+                    {
+                        <p>
+                            @info
+                        </p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                    <a type="button" href="@downloadLink" class="btn btn-primary">Download</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private string downloadLink = "";
+    private bool ShowFileResult = false;
+    private List<PaperworkEntry> paperworkEntries = new List<PaperworkEntry>() { new PaperworkEntry() };
+    private List<string> departments = new List<string>();
+    private List<string> users = new List<string>();
+    private List<string> locations = new List<string>();
+    private List<string> errors = new List<string>();
+    private List<string> infos = new List<string>();
+    private ElementReference lastRowFirstInput;
+
+    void CloseModal()
+    {
+        ShowFileResult = false;
+    }
+
+    async Task OnStart()
+    {
+        var httpClient = ClientFactory.CreateClient("PaperworkClient");
+
+        var usersJson = await httpClient.GetStringAsync("https://localhost:44334/TrackitApi/GetUsers");
+        var departmentsJson = await httpClient.GetStringAsync("https://localhost:44334/TrackitApi/GetDepartments");
+        var locationsJson = await httpClient.GetStringAsync("https://localhost:44334/TrackitApi/GetLocations");
+
+        departments = JsonSerializer.Deserialize<List<string>>(departmentsJson);
+        users = JsonSerializer.Deserialize<List<string>>(usersJson);
+        locations = JsonSerializer.Deserialize<List<string>>(locationsJson);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await OnStart();
+    }
+
+    public void AddRow()
+    {
+        paperworkEntries.Add(new PaperworkEntry());
+        return;
+    }
+
+    public async Task Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            AddRow();
+
+            // Delay to give time for elements to update and add new row to table
+            await Task.Delay(20);
+            await lastRowFirstInput.FocusAsync();
+        }
+    }
+
+    public async Task GeneratePaperwork()
+    {
+        var httpClient = ClientFactory.CreateClient("PaperworkClient");
+
+        var jsonObject = JsonSerializer.Serialize(paperworkEntries.Where((entry) => entry.TOD is string));
+
+        var content = new StringContent(jsonObject, System.Text.Encoding.UTF8, "application/json");
+        var result = await (await httpClient.PostAsync("https://localhost:44334/PaperworkExcelApi", content)).Content.ReadAsStringAsync();
+        PaperworkResponse paperworkResponse = JsonSerializer.Deserialize<PaperworkResponse>(result);
+
+        downloadLink = $"https://localhost:44334/downloadpaperwork/{paperworkResponse.FileName}";
+
+        errors = paperworkResponse.Errors;
+        infos = paperworkResponse.Info;
+
+        ShowFileResult = true;
+    }
+
+}
