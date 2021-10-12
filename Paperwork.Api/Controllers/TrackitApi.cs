@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Paperwork.Api.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "davie-fl\\BomgarHelpDesk")]
     [ApiController]
     [Route("[controller]")]
     public class TrackitApi : ControllerBase
@@ -46,6 +46,7 @@ namespace Paperwork.Api.Controllers
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
         }
+
         [HttpGet("GetDepartments")]
         public async Task<IActionResult> GetDepartments()
         {
@@ -64,6 +65,7 @@ namespace Paperwork.Api.Controllers
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
         }
+
         [HttpGet("GetLocations")]
         public async Task<IActionResult> GetLocations()
         {

@@ -42,7 +42,7 @@ namespace Paperwork.Core
         public PaperworkResponse GeneratePaperwork(List<PaperworkRequest> paperworkRequests)
         {
             string saveDir = GetTemporaryDirectory();
-            string fileName = "Equipment From Template.xlsx";
+            string fileName = "Equipment Form Template.xlsx";
             string path = Path.Combine(Environment.CurrentDirectory, @"Excel Sheets\", fileName);
             List<string> info = new List<string>();
             List<string> errors = new List<string>();

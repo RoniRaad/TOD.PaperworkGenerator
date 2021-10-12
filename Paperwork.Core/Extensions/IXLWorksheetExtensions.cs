@@ -13,7 +13,7 @@ namespace Paperwork.Core.Extensions
     public static class IXLWorksheetExtensions
     {
         public static bool ReplaceValueInSheet(this IXLWorksheet worksheet, string fromValue, string toValue)
-{
+        {
             foreach (var cell in worksheet.Cells())
             {
                 if (!(cell?.GetValue<string>() is null) && cell.GetValue<string>().Contains(fromValue))
