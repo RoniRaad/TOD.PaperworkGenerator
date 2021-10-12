@@ -24,18 +24,19 @@
     <tbody id="paperworkEntriesBody">
         @foreach (var item in paperworkEntries)
         {
-            <tr>
+            <tr id="@paperworkEntries.IndexOf(item)">
                 <td>
-                    <input @bind="@(item.TOD)" @onkeydown="@Enter" @ref="lastRowFirstInput" class="form-control" placeholder="Ex: TOD22222">
+                    <button @onclick="() => DeleteRow(paperworkEntries.IndexOf(item))" tabindex="-1" class="btn btn-sm" style="padding: 0.1rem .3em;margin-left:-36px">X</button>
+                    <input @bind="@(item.TOD)" @ref="lastRowFirstInput" class="form-control" style="display:inline;margin-left:5px" placeholder="Ex: TOD22222">
                 </td>
                 <td>
-                    <input @bind="@(item.Department)" @onkeydown="@Enter" list="departments" class="form-control" placeholder="Ex: Information Technology">
+                    <input @bind="@(item.Department)" list="departments" class="form-control" placeholder="Ex: Information Technology">
                 </td>
                 <td>
-                    <input @bind="@(item.User)" @onkeydown="@Enter" list="users" class="form-control" placeholder="Ex: Roni Raad">
+                    <input @bind="@(item.User)" list="users" class="form-control" placeholder="Ex: Roni Raad">
                 </td>
                 <td>
-                    <input @bind="@(item.Location)" @onkeydown="@Enter" list="locations" class="form-control" placeholder="Ex: Town Hall - Building B">
+                    <input @bind="@(item.Location)" list="locations" class="form-control" placeholder="Ex: Town Hall - Building B">
                 </td>
                 <td>
                     <input @bind="@(item.Requestor)" @onkeydown="@Enter" class="form-control" placeholder="Ex: Matthew Tighe">
@@ -125,6 +126,12 @@
     void CloseModal()
     {
         ShowFileResult = false;
+    }
+
+    void DeleteRow(int i)
+    {
+        if (paperworkEntries.Count > 1)
+            paperworkEntries.RemoveAt(i);
     }
 
     async Task OnStart()

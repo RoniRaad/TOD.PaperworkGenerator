@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Excel Sheets\Copy of Blank Equipment Form.xlsx">
+    <None Update="Excel Sheets\Equipment Form Template.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

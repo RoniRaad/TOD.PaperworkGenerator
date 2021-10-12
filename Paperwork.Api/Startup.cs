@@ -30,7 +30,7 @@ namespace Paperwork.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTransient<IExcelService, ExcelService>();
+            services.AddTransient<IExcelService, PaperworkService>();
             services.AddTransient<IDatabaseService, DatabaseService>();
 
             services.Configure<TrackitConfig>(Configuration.GetSection("Trackit"));

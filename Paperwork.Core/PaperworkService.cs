@@ -18,11 +18,11 @@ using Paperwork.Core.Models;
 
 namespace Paperwork.Core
 {
-    public partial class ExcelService : IExcelService
+    public class PaperworkService : IExcelService
     {
         private readonly IDatabaseService _databaseService;
 
-        public ExcelService(IDatabaseService databaseService)
+        public PaperworkService(IDatabaseService databaseService)
         {
             _databaseService = databaseService;
         }
@@ -42,7 +42,7 @@ namespace Paperwork.Core
         public PaperworkResponse GeneratePaperwork(List<PaperworkRequest> paperworkRequests)
         {
             string saveDir = GetTemporaryDirectory();
-            string fileName = "Copy of Blank Equipment Form.xlsx";
+            string fileName = "Equipment From Template.xlsx";
             string path = Path.Combine(Environment.CurrentDirectory, @"Excel Sheets\", fileName);
             List<string> info = new List<string>();
             List<string> errors = new List<string>();
@@ -51,6 +51,7 @@ namespace Paperwork.Core
             {
                 using (var workbook = new XLWorkbook(path))
                 {
+                    Checkboxes checkbox;
                     var sheet = workbook.Worksheets.First();
 
                     var trackitInfo = GetTrackitEquiptmentFromRequest(request);
@@ -67,16 +68,31 @@ namespace Paperwork.Core
                     sheet.ReplaceValueInSheet("{TrackitNum}", searchForWorkOrder);
                     sheet.ReplaceValueInSheet("{TODNum}", request.TOD);
                     sheet.ReplaceValueInSheet("{SerialNum}", trackitInfo.ServiceTag);
-                    sheet.ReplaceValueInSheet("{AuctionNum}", "");
                     sheet.SetToAndFromField("User", trackitInfo.CurrentUser, request.User);
                     sheet.SetToAndFromField("Dept", trackitInfo.Department, request.Department);
                     sheet.SetToAndFromField("Location", trackitInfo.Location, request.Location);
                     sheet.ReplaceValueInSheet("{Notes}", request.Notes is null ? "" : request.Notes);
                     sheet.ReplaceValueInSheet("{TechName}", request.Requestor is null ? "" : request.Requestor);
                     sheet.ReplaceValueInSheet("{CurrentDate}", DateTime.Now.ToString("d"));
-                    sheet.ReplaceValueInSheet("{OtherDesc}", "");
-                    int checkbox = (int)Enum.Parse(typeof(Checkboxes), trackitInfo.Type);
-                    sheet.Cell($"Q{checkbox + 1}").Value = true;
+
+                    if (Enum.TryParse<Checkboxes>(trackitInfo.Type, out checkbox))
+                    {
+                        sheet.Cell($"Q{(int)checkbox + 1}").Value = true;
+                        sheet.ReplaceValueInSheet("{OtherDesc}", "");
+                    }
+                    else
+                    {
+                        sheet.Cell($"Q{(int)Checkboxes.Other + 1}").Value = true;
+                        sheet.ReplaceValueInSheet("{OtherDesc}", trackitInfo.Type);
+                    }
+                    sheet.ReplaceValueInSheet("{AuctionNum}", "");
+
+                    // We compare to true because null can be returned on the left side of both comparisons
+                    if (request?.Location?.ToLower()?.Contains("eol") == true || request?.Location?.ToLower()?.Contains("end of life") == true)
+                    {
+                        sheet.Cell($"Q{(int)Checkboxes.EOL_Auction + 1}").Value = true;
+                    }
+
                     workbook.SaveAs($"{saveDir}\\{request.Requestor}\\{((request.User == null) ? trackitInfo.CurrentUser : request.User)}_{request.TOD}_{trackitInfo.Type}.xlsx");
                 }
             }
