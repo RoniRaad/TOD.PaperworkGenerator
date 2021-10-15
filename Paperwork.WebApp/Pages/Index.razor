@@ -7,6 +7,7 @@
 @inject IHttpClientFactory ClientFactory
 @inject IOptions<WebAppConfig> webConfig
 
+
 <h1>PaperWork Generator</h1>
 
 <p>This component generates paperwork for the Town of Davie.</p>
@@ -34,10 +35,10 @@
                 <input @bind="@(item.Department)" list="departments" class="form-control" placeholder="Ex: Information Technology">
             </td>
             <td>
-                <input @bind="@(item.User)" list="users" class="form-control" placeholder="Ex: Roni Raad">
+                <input @bind="@(item.User)"  list="users" class="form-control" placeholder="Ex: Roni Raad">
             </td>
             <td>
-                <input @bind="@(item.Location)" list="locations" class="form-control" placeholder="Ex: Town Hall - Building B">
+                <input @bind="@(item.Location)"  list="locations" class="form-control" placeholder="Ex: Town Hall - Building B">
             </td>
             <td>
                 <input @bind="@(item.Requestor)" @onkeydown="@Enter" class="form-control" placeholder="Ex: Matthew Tighe">
@@ -50,6 +51,8 @@
 
     </tbody>
 </table>
+
+<button tabindex="-1" @onclick="AddRow" class="btn btn-sm" style="padding: 0.1rem .3em;margin-left: -31px;font-size: 21px;color: lightseagreen;">+</button>
 
 <datalist id="departments">
     @foreach (var department in departments)
@@ -80,28 +83,33 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Paperwork Created!</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
             <div class="modal-body">
                 @if (errors.Count > 0)
+                {
+                    <h5 style="color:red">Errors: </h5>
+                    @foreach (var error in errors)
                     {
-                <h5 style="color:red">Errors: </h5>
-                @foreach (var error in errors)
-                        {
-                <p>
-                    @error
-                </p>
-                        }
+                        <p>
+                            @error
+                        </p>
                     }
-                <h5 style="color:green">Info: </h5>
-                @foreach (var info in infos)
+                }
+                else
+                {
+                    <h5 style="color:green">Success</h5>
+                }
+                @if (infos.Count > 0)
+                {
+                    <h5 style="color:green">Info: </h5>
+                    @foreach (var info in infos)
                     {
-                <p>
-                    @info
-                </p>
+                        <p>
+                            @info
+                        </p>
                     }
+                }
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
@@ -177,9 +185,40 @@
 
     public async Task GeneratePaperwork()
     {
+
+        var entriesToProccess = paperworkEntries.Where((entry) =>
+        {
+            var isValidEntry = true;
+            infos = new List<string>();
+            errors = new List<string>();
+
+            if (!String.IsNullOrEmpty(entry.Department) && !departments.Contains(entry.Department))
+            {
+                errors.Add($"Error: {entry.TOD} has an invalid department! Skipping...");
+                isValidEntry = false;
+            }
+
+            if (!String.IsNullOrEmpty(entry.Location) && !locations.Contains(entry.Location))
+            {
+                errors.Add($"Error: {entry.TOD} has an invalid location! Skipping...");
+                isValidEntry = false;
+            }
+
+            if (!String.IsNullOrEmpty(entry.User) && !users.Contains(entry.User))
+            {
+                errors.Add($"Error: {entry.TOD} has an invalid user! Skipping...");
+                isValidEntry = false;
+            }
+
+            if (entry.TOD is null)
+                isValidEntry = false;
+
+            return isValidEntry;
+        });
+
         var httpClient = ClientFactory.CreateClient("PaperworkClient");
 
-        var jsonObject = JsonSerializer.Serialize(paperworkEntries.Where((entry) => entry.TOD is string));
+        var jsonObject = JsonSerializer.Serialize(entriesToProccess);
 
         var content = new StringContent(jsonObject, System.Text.Encoding.UTF8, "application/json");
         var result = await (await httpClient.PostAsync($"{_webConfig.ApiUrl}/PaperworkExcelApi", content)).Content.ReadAsStringAsync();
@@ -187,8 +226,8 @@
 
         downloadLink = $"{_webConfig.ApiUrl}/downloadpaperwork/{paperworkResponse.FileName}";
 
-        errors = paperworkResponse.Errors;
-        infos = paperworkResponse.Info;
+        infos = infos.Concat(paperworkResponse.Info).ToList();
+        errors = errors.Concat(paperworkResponse.Errors).ToList();
 
         ShowFileResult = true;
     }

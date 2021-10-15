@@ -31,12 +31,12 @@ namespace Paperwork.Infrastructure.Services
             _iOService = iOService;
         }
 
-        public IExcelService OpenNewWorkbook()
+        public IExcelService OpenNewWorkbook(List<string> infoList, List<string> errorList)
         {
             workbook = _workbookFactory.GetPaperworkTemplateWorkbook();
             worksheet = workbook.Worksheets.First();
-            info = new List<string>();
-            errors = new List<string>();
+            info = infoList;
+            errors = errorList;
 
             return this;
         }
@@ -88,19 +88,14 @@ namespace Paperwork.Infrastructure.Services
             return this;
         }
 
-        public PaperworkResponse Save(string dir)
+        public IEmptyExcelService Save(string dir)
         {
             
             workbook.SaveAs($"{dir}\\{paperworkRequest.Requestor}\\{((paperworkRequest.User == null) ? trackitEquipment.CurrentUser : paperworkRequest.User)}_{paperworkRequest.TOD}_{trackitEquipment.Type}.xlsx");
 
             workbook.Dispose();
 
-            return new PaperworkResponse
-            {
-                Info = info,
-                Errors = errors,
-                FileName = Path.GetFileName(dir + ".zip")
-            };
+            return this;
         }
     }
 }

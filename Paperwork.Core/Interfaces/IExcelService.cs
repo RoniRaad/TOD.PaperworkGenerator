@@ -6,6 +6,6 @@ namespace Paperwork.Core.Interfaces
     {
         IExcelService SetFields(TrackitEquipment trackitEquipment, PaperworkRequest paperworkRequest);
         IExcelService SetCheckboxes();
-        PaperworkResponse Save(string dir);
+        IEmptyExcelService Save(string dir);
     }
 }

@@ -15,6 +15,9 @@ using Paperwork.Core.Enums;
 using Paperwork.Core.Extensions;
 using Paperwork.Core.Interfaces;
 using Paperwork.Core.Models;
+using DocumentFormat.OpenXml.EMMA;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.Office.Interop.Excel;
 
 namespace Paperwork.Core
 {
@@ -33,22 +36,42 @@ namespace Paperwork.Core
 
         public PaperworkResponse GeneratePaperwork(List<PaperworkRequest> paperworkRequests)
         {
+            List<string> infoMessages = new List<string>();
+            List<string> errorMessages = new List<string>();
+
             var tempDirName = _iOService.GetTemporaryDirectory();
-            PaperworkResponse response = new PaperworkResponse() { FileName = tempDirName + ".zip"};
 
             foreach (var request in paperworkRequests)
             {
-                var trackitInfo = _databaseService.GetTrackitItemInfo(request.TOD);
+                try
+                {
+                    var trackitInfo = _databaseService.GetTrackitItemInfo(request.TOD);
 
-                response = _excelService.OpenNewWorkbook()
-                    .SetFields(trackitInfo, request)
-                    .Save(tempDirName);
+                    if (trackitInfo is null)
+                    {
+                        errorMessages.Add($"Error: {request.TOD} not found in TrackIt database! Skipping.");
+                        continue;
+                    }
 
+
+                    _excelService.OpenNewWorkbook(infoMessages, errorMessages)
+                        .SetFields(trackitInfo, request)
+                        .Save(tempDirName);
+                }
+                catch (Exception e)
+                {
+                    errorMessages.Add($"Error: An error occured while creating paperwork for {request.TOD}. Skipping.");
+                }
             }
 
             _iOService.ZipFolderIntoFile(tempDirName, tempDirName + ".zip");
 
-            return response;
+            return new PaperworkResponse
+            {
+                Info = infoMessages,
+                Errors = errorMessages,
+                FileName = Path.GetFileName(tempDirName + ".zip")
+            }; ;
         }
     }
 }
