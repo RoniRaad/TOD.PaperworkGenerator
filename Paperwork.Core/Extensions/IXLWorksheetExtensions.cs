@@ -34,7 +34,7 @@ namespace Paperwork.Core.Extensions
 
             worksheet.ReplaceValueInSheet(fromField, fromValue);
 
-            if (toValue == fromValue)
+            if (toValue.Trim() == fromValue.Trim())
                 worksheet.ReplaceValueInSheet(toField, "");
             else
                 worksheet.ReplaceValueInSheet(toField, toValue);

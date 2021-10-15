@@ -7,7 +7,7 @@ namespace Paperwork.Core.Interfaces
     {
         IList<string> GetDepartments();
         IList<string> GetLocations();
-        TrackitEquiptment GetTrackitItemInfo(string todNum);
+        TrackitEquipment GetTrackitItemInfo(string todNum);
         IList<string> GetUsers();
         string GetWorkOrderNumber(string todNum);
     }

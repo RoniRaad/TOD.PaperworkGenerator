@@ -10,17 +10,17 @@ using Microsoft.Extensions.Options;
 
 namespace Paperwork.Infrastructure.Services
 {
-    public class DatabaseService : IDatabaseService
+    public class T11DatabaseService : IDatabaseService
     {
         private readonly TrackitConfig _trackitConfig;
-        public DatabaseService(IOptions<TrackitConfig> trackitConfig)
+        public T11DatabaseService(IOptions<TrackitConfig> trackitConfig)
         {
             _trackitConfig = trackitConfig.Value;
         }
 
-        public TrackitEquiptment GetTrackitItemInfo(string todNum)
+        public TrackitEquipment GetTrackitItemInfo(string todNum)
         {
-            List<TrackitEquiptment> trackitEquiptment = new List<TrackitEquiptment>();
+            List<TrackitEquipment> trackitEquiptment = new List<TrackitEquipment>();
             using (SqlConnection con = new SqlConnection(_trackitConfig.ConnectionString))
             {
                 con.Open();
@@ -30,7 +30,7 @@ namespace Paperwork.Infrastructure.Services
                     {
                         while (reader.Read())
                         {
-                            trackitEquiptment.Add(new TrackitEquiptment()
+                            trackitEquiptment.Add(new TrackitEquipment()
                             {
                                 CurrentUser = !reader.IsDBNull("NAME") ? reader.GetString("NAME") : null,
                                 ServiceTag = !reader.IsDBNull("COMPUTERSERVICETAG") ? reader.GetString("COMPUTERSERVICETAG") : null,
@@ -40,6 +40,7 @@ namespace Paperwork.Infrastructure.Services
                                 Description = !reader.IsDBNull("ID_4") ? reader.GetString("ID_4") : null,
                                 Price = !reader.IsDBNull("ID_3") ? reader.GetString("ID_3") : null,
                                 TodNum = todNum,
+                                WorkOrderNum = GetWorkOrderNumber(todNum) ?? "N/A"
                             });
 
                         }
@@ -47,12 +48,12 @@ namespace Paperwork.Infrastructure.Services
                 }
             }
 
-            return trackitEquiptment.FirstOrDefault<TrackitEquiptment>();
+            return trackitEquiptment.FirstOrDefault<TrackitEquipment>();
         }
 
         public string GetWorkOrderNumber(string todNum)
         {
-            List<TrackitEquiptment> trackitEquiptment = new List<TrackitEquiptment>();
+            List<TrackitEquipment> trackitEquiptment = new List<TrackitEquipment>();
             using (SqlConnection con = new SqlConnection(_trackitConfig.ConnectionString))
             {
                 con.Open();

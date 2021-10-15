@@ -14,15 +14,15 @@ using Microsoft.AspNetCore.Http;
 
 namespace Paperwork.Api.Controllers
 {
-    [Authorize(Roles = "davie-fl\\BomgarHelpDesk")]
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class PaperworkExcelApi : ControllerBase
     {
         private readonly ILogger<PaperworkExcelApi> _logger;
-        private readonly IExcelService _excelService;
+        private readonly IPaperworkService _excelService;
 
-        public PaperworkExcelApi(ILogger<PaperworkExcelApi> logger, IExcelService excelService)
+        public PaperworkExcelApi(ILogger<PaperworkExcelApi> logger, IPaperworkService excelService)
         {
             _logger = logger;
             _excelService = excelService;

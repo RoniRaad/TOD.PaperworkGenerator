@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.IISIntegration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Paperwork.Core;
+using Paperwork.Core.Factories;
 using Paperwork.Core.Interfaces;
 using Paperwork.Core.Models;
 using Paperwork.Infrastructure.Services;
@@ -30,8 +32,13 @@ namespace Paperwork.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTransient<IExcelService, PaperworkService>();
-            services.AddTransient<IDatabaseService, DatabaseService>();
+            services.AddTransient<IPaperworkService, PaperworkService>();
+            services.AddTransient<IDatabaseService, T11DatabaseService>();
+            services.AddTransient<IIOService, IOService>();
+            services.AddTransient<IEmptyExcelService, ExcelService>();
+            services.AddTransient<IExcelWorkbookFactory, ExcelWorkbookFactory>();
+
+            services.AddAuthentication("Windows");
 
             services.Configure<TrackitConfig>(Configuration.GetSection("Trackit"));
 

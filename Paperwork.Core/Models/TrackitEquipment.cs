@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Paperwork.Core.Models
 {
-    public class TrackitEquiptment
+    public class TrackitEquipment
     {
         public string CurrentUser { get; set; }
         public string ServiceTag { get; set; }
@@ -16,5 +16,6 @@ namespace Paperwork.Core.Models
         public string Description { get; set; }
         public string TodNum { get; set; }
         public string Price { get; set; }
+        public string WorkOrderNum { get; set; }
     }
 }

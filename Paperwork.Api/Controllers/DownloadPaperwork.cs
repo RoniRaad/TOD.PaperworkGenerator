@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Paperwork.Api.Controllers
 {
-    [Authorize(Roles = "davie-fl\\BomgarHelpDesk")]
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class DownloadPaperwork : ControllerBase

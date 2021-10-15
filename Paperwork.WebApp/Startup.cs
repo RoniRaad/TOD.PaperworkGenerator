@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Server.IISIntegration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Paperwork.WebApp.Models;
 using System.Net.Http;
 
 namespace Paperwork.WebApp
@@ -24,6 +26,8 @@ namespace Paperwork.WebApp
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.Configure<WebAppConfig>(Configuration.GetSection("WebAppConfig"));
+
             services.AddHttpClient("PaperworkClient", c =>
             {
 
